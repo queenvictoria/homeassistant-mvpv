@@ -1,10 +1,10 @@
 {
   "domain": "mypv",
   "name": "MyPV AC-THOR and ELWA",
-  "documentation": "http://www.ziegler.bz",
+  "documentation": "https://github.com/coccyx00/homeassistant-mvpv",
   "config_flow": true,
   "dependencies": [],
-  "codeowners": ["@zaubererty"],
+  "codeowners": ["@coccyx00", "@zaubererty"],
   "requirements": [],
-  "version": "1.0.0"
+  "version": "1.1.0"
 }
