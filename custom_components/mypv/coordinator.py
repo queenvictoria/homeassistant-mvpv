@@ -3,6 +3,7 @@ from datetime import timedelta
 import logging
 import requests
 import json
+from datetime import date
 
 from async_timeout import timeout
 from homeassistant.util.dt import utcnow
@@ -63,6 +64,17 @@ class MYPVDataUpdateCoordinator(DataUpdateCoordinator):
         try:
             response = requests.get(f"http://{self._host}/data.jsn")
             data = json.loads(response.text)
+
+            today = date.today()
+            response = requests.get(f"http://{self._host}/chart.jsn?chd=1&chm=" + str(today.month) + "&chy="+ today.strftime("%y") +"&chpl=31&cht=4&cha=0&chp1=5&chp2=6")
+            chartData = json.loads(response.text)
+            data['ret_grid_power'] = int(chartData['5'].split(',')[today.day - 1])
+            data['grid_power_consumption'] = abs(int(chartData['6'].split(',')[today.day - 1]))
+
+            response = requests.get(f"http://{self._host}/chart.jsn?chd=1&chm=" + str(today.month) + "&chy="+ today.strftime("%y") +"&chpl=31&cht=4&cha=0&chp1=3&chp2=4")
+            chartData = json.loads(response.text)
+            data['energy_consumption'] = int(chartData['3'].split(',')[today.day - 1]) + int(chartData['4'].split(',')[today.day - 1])
+
             _LOGGER.debug(data)
             return data
         except:
