@@ -54,7 +54,7 @@ class MYPVDataUpdateCoordinator(DataUpdateCoordinator):
             }
 
         try:
-            async with timeout(4):
+            async with timeout(8):
                 return await self.hass.async_add_executor_job(_update_data)
         except Exception as error:
             raise UpdateFailed(f"Invalid response from API: {error}") from error
