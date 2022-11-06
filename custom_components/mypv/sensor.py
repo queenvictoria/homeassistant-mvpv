@@ -3,7 +3,6 @@
 import logging
 from homeassistant.const import CONF_MONITORED_CONDITIONS
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from homeassistant.components.sensor import SensorStateClass, SensorEntity
 from homeassistant.const import (
     ELECTRIC_CURRENT_AMPERE,
     FREQUENCY_HERTZ,
@@ -29,10 +28,8 @@ async def async_setup_entry(hass, entry, async_add_entities):
     async_add_entities(entities)
 
 
-class MypvDevice(CoordinatorEntity,SensorEntity):
+class MypvDevice(CoordinatorEntity):
     """Representation of a MYPV device."""
-
-    _attr_state_class = SensorStateClass.TOTAL_INCREASING
 
     def __init__(self, coordinator, sensor_type, name):
         """Initialize the sensor."""
@@ -45,8 +42,6 @@ class MypvDevice(CoordinatorEntity,SensorEntity):
         self._last_value = None
         self._unit_of_measurement = SENSOR_TYPES[self.type][1]
         self._icon = SENSOR_TYPES[self.type][2]
-        self._attr_state_class = SENSOR_TYPES[self.type][4]
-        self._attr_device_class = SENSOR_TYPES[self.type][5]
         self.serial_number = self.coordinator.data["info"]["sn"]
         self.model = self.coordinator.data["info"]["device"]
         _LOGGER.debug(self.coordinator)
