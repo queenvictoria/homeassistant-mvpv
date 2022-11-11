@@ -18,12 +18,14 @@ _LOGGER = logging.getLogger(__name__)
 class MYPVDataUpdateCoordinator(DataUpdateCoordinator):
     """Class to manage fetching MYPV data."""
 
-    def __init__(self, hass: HomeAssistantType, *, config: dict, options: dict):
+    def __init__(self, hass: HomeAssistantType, *, config: dict, options: dict) -> None:
         """Initialize global NZBGet data updater."""
         self._host = config[CONF_HOST]
         self._info = None
         self._setup = None
+        self._firmware = None
         self._next_update = 0
+        self._next_update_firmware = 0
         update_interval = timedelta(seconds=10)
 
         super().__init__(
@@ -46,10 +48,18 @@ class MYPVDataUpdateCoordinator(DataUpdateCoordinator):
                 self._next_update = utcnow().timestamp() + 120  # 86400
                 self._setup = self.setup_update()
 
+            if (
+                self._firmware is None
+                or self._next_update_firmware < utcnow().timestamp()
+            ):
+                self._next_update_firmware = utcnow().timestamp() + (7 * 86400)
+                self._firmware = self.firmware_update()
+
             return {
                 "data": data,
                 "info": self._info,
                 "setup": self._setup,
+                "firmware": self._firmware,
             }
 
         try:
@@ -61,7 +71,7 @@ class MYPVDataUpdateCoordinator(DataUpdateCoordinator):
     def data_update(self):
         """Update inverter data."""
         try:
-            response = requests.get(f"http://{self._host}/data.jsn")
+            response = requests.get(f"http://{self._host}/data.jsn", timeout=10)
             data = json.loads(response.text)
             _LOGGER.debug(data)
             return data
@@ -71,7 +81,7 @@ class MYPVDataUpdateCoordinator(DataUpdateCoordinator):
     def info_update(self):
         """Update inverter info."""
         try:
-            response = requests.get(f"http://{self._host}/mypv_dev.jsn")
+            response = requests.get(f"http://{self._host}/mypv_dev.jsn", timeout=10)
             info = json.loads(response.text)
             _LOGGER.debug(info)
             return info
@@ -81,7 +91,20 @@ class MYPVDataUpdateCoordinator(DataUpdateCoordinator):
     def setup_update(self):
         """Update inverter info."""
         try:
-            response = requests.get(f"http://{self._host}/setup.jsn")
+            response = requests.get(f"http://{self._host}/setup.jsn", timeout=10)
+            info = json.loads(response.text)
+            _LOGGER.debug(info)
+            return info
+        except:
+            pass
+
+    def firmware_update(self):
+        """read the firmware info"""
+        try:
+            response = requests.get(
+                "https://www.my-pv.com/download/currentversion.php?sn=", timeout=10
+            )
+
             info = json.loads(response.text)
             _LOGGER.debug(info)
             return info

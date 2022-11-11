@@ -23,8 +23,12 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
     entities = []
 
-    for sensor in entry.data[CONF_MONITORED_CONDITIONS]:
-        entities.append(MypvDevice(coordinator, sensor, entry.title))
+    if CONF_MONITORED_CONDITIONS in entry.options:
+        for sensor in entry.options[CONF_MONITORED_CONDITIONS]:
+            entities.append(MypvDevice(coordinator, sensor, entry.title))
+    else:
+        for sensor in entry.data[CONF_MONITORED_CONDITIONS]:
+            entities.append(MypvDevice(coordinator, sensor, entry.title))
     async_add_entities(entities)
 
 
@@ -34,6 +38,8 @@ class MypvDevice(CoordinatorEntity):
     def __init__(self, coordinator, sensor_type, name):
         """Initialize the sensor."""
         super().__init__(coordinator)
+        if sensor_type not in SENSOR_TYPES:
+            raise KeyError
         self._sensor = SENSOR_TYPES[sensor_type][0]
         self._name = name
         self.type = sensor_type
@@ -42,7 +48,9 @@ class MypvDevice(CoordinatorEntity):
         self._last_value = None
         self._unit_of_measurement = SENSOR_TYPES[self.type][1]
         self._icon = SENSOR_TYPES[self.type][2]
+
         self.serial_number = self.coordinator.data["info"]["sn"]
+        self.fwversion = self.coordinator.data["info"]["fwversion"]
         self.model = self.coordinator.data["info"]["device"]
         _LOGGER.debug(self.coordinator)
 
@@ -57,9 +65,9 @@ class MypvDevice(CoordinatorEntity):
         try:
             state = self.coordinator.data[self._data_source][self.type]
             if self.type == "power_act":
-                relOut = int(self.coordinator.data[self._data_source]["rel1_out"])
-                loadNom = int(self.coordinator.data[self._data_source]["load_nom"])
-                state = (relOut * loadNom) + int(state)
+                rel_out = int(self.coordinator.data[self._data_source]["rel1_out"])
+                load_nom = int(self.coordinator.data[self._data_source]["load_nom"])
+                state = (rel_out * load_nom) + int(state)
             self._last_value = state
         except Exception as ex:
             _LOGGER.error(ex)
@@ -97,4 +105,5 @@ class MypvDevice(CoordinatorEntity):
             "name": self._name,
             "manufacturer": "MYPV",
             "model": self.model,
+            "firmware": self.fwversion,
         }

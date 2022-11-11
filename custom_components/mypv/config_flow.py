@@ -14,9 +14,11 @@ from homeassistant.const import (
     CONF_MONITORED_CONDITIONS,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.util import slugify
 
-from .const import DOMAIN, SENSOR_TYPES  # pylint:disable=unused-import
+from .const import (
+    DOMAIN,
+    SENSOR_TYPES,
+)  # pylint:disable=unused-import
 
 SUPPORTED_SENSOR_TYPES = list(SENSOR_TYPES)
 
@@ -57,7 +59,7 @@ class MypvConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def _check_host(self, host) -> bool:
         """Check if we can connect to the mypv."""
         try:
-            response = requests.get(f"http://{host}/mypv_dev.jsn")
+            response = requests.get(f"http://{host}/mypv_dev.jsn", timeout=10)
             self._info = json.loads(response.text)
         except (ConnectTimeout, HTTPError):
             self._errors[CONF_HOST] = "could_not_connect"
@@ -111,26 +113,44 @@ class MypvConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if self._host_in_configuration_exists(user_input[CONF_HOST]):
             return self.async_abort(reason="host_exists")
         return await self.async_step_user(user_input)
-    
+
     @staticmethod
     @callback
     def async_get_options_flow(config_entry):
-        return MypvOptionsFlowHandler()
-    
+        return MypvOptionsFlowHandler(config_entry)
+
+
 class MypvOptionsFlowHandler(config_entries.OptionsFlow):
+    """Handles options flow"""
+
+    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
+        """Initialize options flow."""
+        self.config_entry = config_entry
+
     async def async_step_init(self, user_input=None):
         """Manage the options."""
         if user_input is not None:
-            return self.async_create_entry(title="", data=user_input)
+            conditions = user_input[CONF_MONITORED_CONDITIONS]
 
-        return self.async_show_form(
-            step_id="init",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(
-                        "show_things",
-                        default=self.config_entry.options.get("show_things"),
-                    ): bool
-                }
-            ),
+            return self.async_create_entry(
+                title="",
+                data={
+                    CONF_MONITORED_CONDITIONS: conditions,
+                },
+            )
+
+        default_monitored_conditions = DEFAULT_MONITORED_CONDITIONS
+
+        options_schema = vol.Schema(
+            {
+                # vol.Required(
+                #    "show_things",
+                #    default=self.config_entry.options.get("show_things"),
+                # ): bool,
+                vol.Required(
+                    CONF_MONITORED_CONDITIONS, default=default_monitored_conditions
+                ): cv.multi_select(SUPPORTED_SENSOR_TYPES),
+            }
         )
+
+        return self.async_show_form(step_id="init", data_schema=options_schema)

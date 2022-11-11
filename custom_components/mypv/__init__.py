@@ -8,11 +8,17 @@ from homeassistant.const import (
     CONF_MONITORED_CONDITIONS,
 )
 import homeassistant.helpers.config_validation as cv
-
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.typing import HomeAssistantType
 
-from .const import DOMAIN, SENSOR_TYPES, DATA_COORDINATOR
+from .const import (
+    PLATFORMS,
+    DOMAIN,
+    SENSOR_TYPES,
+    DATA_COORDINATOR,
+)
+
 from .coordinator import MYPVDataUpdateCoordinator
 
 
@@ -22,7 +28,8 @@ CONFIG_SCHEMA = vol.Schema(
             {
                 vol.Required(CONF_HOST): cv.string,
                 vol.Required(CONF_MONITORED_CONDITIONS): vol.All(
-                    cv.ensure_list, [vol.In(list(SENSOR_TYPES))]
+                    cv.ensure_list,
+                    [vol.In(list(SENSOR_TYPES))],
                 ),
             }
         )
@@ -48,13 +55,16 @@ async def async_setup(hass, config):
 
 async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
     """Load the saved entities."""
+
     coordinator = MYPVDataUpdateCoordinator(
         hass,
         config=entry.data,
         options=entry.options,
     )
-
     await coordinator.async_refresh()
+
+    # Reload entry when its updated.
+    entry.async_on_unload(entry.add_update_listener(_async_update_listener))
 
     if not coordinator.last_update_success:
         raise ConfigEntryNotReady
@@ -66,4 +76,17 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
     hass.async_create_task(
         hass.config_entries.async_forward_entry_setup(entry, "sensor")
     )
+
     return True
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Unload a config entry."""
+    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
+        hass.data[DOMAIN].pop(entry.entry_id)
+    return unload_ok
+
+
+async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Handle options update."""
+    await hass.config_entries.async_reload(entry.entry_id)
