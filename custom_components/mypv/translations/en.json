@@ -14,5 +14,17 @@
     "abort": {
       "host_exists": "This host is already configured"
     }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Configure sensors",
+        "data": {
+          "use_all_sensors": "Create all sensor (override the select list)",
+          "monitored_conditions": "Auswahl der Sensoren",
+          "polling_interval": "Intervall zum Abfragen der Daten [Sekunden]"
+        }
+      }
+    }
   }
 }

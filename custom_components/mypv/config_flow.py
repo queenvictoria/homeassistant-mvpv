@@ -130,12 +130,13 @@ class MypvOptionsFlowHandler(config_entries.OptionsFlow):
     async def async_step_init(self, user_input=None):
         """Manage the options."""
         if user_input is not None:
-            conditions = user_input[CONF_MONITORED_CONDITIONS]
 
             return self.async_create_entry(
                 title="",
                 data={
-                    CONF_MONITORED_CONDITIONS: conditions,
+                    CONF_MONITORED_CONDITIONS: user_input[CONF_MONITORED_CONDITIONS],
+                    "use_all_sensors": user_input["use_all_sensors"],
+                    "polling_interval": user_input["polling_interval"],
                 },
             )
 
@@ -143,12 +144,19 @@ class MypvOptionsFlowHandler(config_entries.OptionsFlow):
 
         options_schema = vol.Schema(
             {
-                # vol.Required(
-                #    "show_things",
-                #    default=self.config_entry.options.get("show_things"),
-                # ): bool,
                 vol.Required(
-                    CONF_MONITORED_CONDITIONS, default=default_monitored_conditions
+                    "polling_interval",
+                    default=self.config_entry.options.get("polling_interval", 10),
+                ): int,
+                vol.Optional(
+                    "use_all_sensors",
+                    default=self.config_entry.options.get("use_all_sensors", False),
+                ): bool,
+                vol.Required(
+                    CONF_MONITORED_CONDITIONS,
+                    default=self.config_entry.options.get(
+                        CONF_MONITORED_CONDITIONS, DEFAULT_MONITORED_CONDITIONS
+                    ),
                 ): cv.multi_select(SUPPORTED_SENSOR_TYPES),
             }
         )

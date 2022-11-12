@@ -3,6 +3,7 @@
 import logging
 from homeassistant.const import CONF_MONITORED_CONDITIONS
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.const import (
     ELECTRIC_CURRENT_AMPERE,
     FREQUENCY_HERTZ,
@@ -21,9 +22,18 @@ async def async_setup_entry(hass, entry, async_add_entities):
         DATA_COORDINATOR
     ]
 
+    if (
+        "polling_interval" in entry.options
+        and entry.options["polling_interval"] != coordinator.update_interval
+    ):
+        coordinator.set_interval(entry.options["polling_interval"])
+
     entities = []
 
-    if CONF_MONITORED_CONDITIONS in entry.options:
+    if "use_all_sensors" in entry.options and entry.options["use_all_sensors"]:
+        for sensor in SENSOR_TYPES:
+            entities.append(MypvDevice(coordinator, sensor, entry.title))
+    elif CONF_MONITORED_CONDITIONS in entry.options:
         for sensor in entry.options[CONF_MONITORED_CONDITIONS]:
             entities.append(MypvDevice(coordinator, sensor, entry.title))
     else:
@@ -76,7 +86,7 @@ class MypvDevice(CoordinatorEntity):
             return state
         if self._unit_of_measurement == FREQUENCY_HERTZ:
             return state / 1000
-        if self._unit_of_measurement == TEMP_CELSIUS:
+        if self._unit_of_measurement == TEMP_CELSIUS and self.type is not "tempchip":
             return state / 10
         if self._unit_of_measurement == ELECTRIC_CURRENT_AMPERE:
             return state / 10
@@ -100,10 +110,11 @@ class MypvDevice(CoordinatorEntity):
     @property
     def device_info(self):
         """Return information about the device."""
-        return {
-            "identifiers": {(DOMAIN, self.serial_number)},
-            "name": self._name,
-            "manufacturer": "MYPV",
-            "model": self.model,
-            "firmware": self.fwversion,
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, self.serial_number)},
+            manufacturer="MYPV",
+            model=self.model,
+            name=self._name,
+            sw_version=self.fwversion,
+            hw_version=None,
+        )

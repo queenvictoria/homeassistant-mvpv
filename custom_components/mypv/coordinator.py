@@ -68,6 +68,9 @@ class MYPVDataUpdateCoordinator(DataUpdateCoordinator):
         except Exception as error:
             raise UpdateFailed(f"Invalid response from API: {error}") from error
 
+    def set_interval(self, new_interval: int):
+        self.update_interval = timedelta(seconds=new_interval)
+
     def data_update(self):
         """Update inverter data."""
         try:
