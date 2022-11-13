@@ -10,8 +10,9 @@ from homeassistant.const import (
     TEMP_CELSIUS,
 )
 
-from .const import SENSOR_TYPES, DOMAIN, DATA_COORDINATOR
+from .const import SENSOR_TYPES, DOMAIN, DATA_COORDINATOR, MYPV_DEVICES
 from .coordinator import MYPVDataUpdateCoordinator
+from .trans import my_pv_trans
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -90,6 +91,22 @@ class MypvDevice(CoordinatorEntity):
             return state / 10
         if self._unit_of_measurement == ELECTRIC_CURRENT_AMPERE:
             return state / 10
+        trans_key = f"info_{self.type}_{str(state)}"
+        if "status" is self.type:
+            trans_key = f"info_state_{MYPV_DEVICES[self.model]}_{str(state)}"
+        elif self.type in ["m1devstate", "m2devstate", "m3devstate", "m4devstate"]:
+            if state & 1:
+                trans_key = "info_measure_devstate_err1"
+            elif state & 2:
+                trans_key = "info_measure_devstate_err2"
+            elif state & 4:
+                trans_key = "info_measure_devstate_err3"
+            elif state & 8:
+                trans_key = "info_measure_devstate_err4"
+            else:
+                return state
+        if trans_key in my_pv_trans:
+            return str(state) + my_pv_trans[trans_key][0]  # 0 = deutsch
         return state
 
     @property

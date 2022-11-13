@@ -40,13 +40,13 @@ class MYPVDataUpdateCoordinator(DataUpdateCoordinator):
 
         def _update_data() -> dict:
             """Fetch data from NZBGet via sync functions."""
-            data = self.data_update()
+            data = self.json_update("data")
             if self._info is None:
-                self._info = self.info_update()
+                self._info = self.json_update("mypv_dev")
 
             if self._setup is None or self._next_update < utcnow().timestamp():
                 self._next_update = utcnow().timestamp() + 120  # 86400
-                self._setup = self.setup_update()
+                self._setup = self.json_update("setup")
 
             if (
                 self._firmware is None
@@ -69,35 +69,16 @@ class MYPVDataUpdateCoordinator(DataUpdateCoordinator):
             raise UpdateFailed(f"Invalid response from API: {error}") from error
 
     def set_interval(self, new_interval: int):
+        """Update polling interval."""
         self.update_interval = timedelta(seconds=new_interval)
 
-    def data_update(self):
+    def json_update(self, page: str):
         """Update inverter data."""
         try:
-            response = requests.get(f"http://{self._host}/data.jsn", timeout=10)
+            response = requests.get(f"http://{self._host}/{page}.jsn", timeout=10)
             data = json.loads(response.text)
             _LOGGER.debug(data)
             return data
-        except:
-            pass
-
-    def info_update(self):
-        """Update inverter info."""
-        try:
-            response = requests.get(f"http://{self._host}/mypv_dev.jsn", timeout=10)
-            info = json.loads(response.text)
-            _LOGGER.debug(info)
-            return info
-        except:
-            pass
-
-    def setup_update(self):
-        """Update inverter info."""
-        try:
-            response = requests.get(f"http://{self._host}/setup.jsn", timeout=10)
-            info = json.loads(response.text)
-            _LOGGER.debug(info)
-            return info
         except:
             pass
 
@@ -107,7 +88,6 @@ class MYPVDataUpdateCoordinator(DataUpdateCoordinator):
             response = requests.get(
                 "https://www.my-pv.com/download/currentversion.php?sn=", timeout=10
             )
-
             info = json.loads(response.text)
             _LOGGER.debug(info)
             return info

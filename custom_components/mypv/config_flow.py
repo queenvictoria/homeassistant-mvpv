@@ -140,8 +140,6 @@ class MypvOptionsFlowHandler(config_entries.OptionsFlow):
                 },
             )
 
-        default_monitored_conditions = DEFAULT_MONITORED_CONDITIONS
-
         options_schema = vol.Schema(
             {
                 vol.Required(

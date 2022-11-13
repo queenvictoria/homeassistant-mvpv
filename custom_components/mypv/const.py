@@ -20,14 +20,14 @@ DATA_COORDINATOR = "corrdinator"
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=10)
 
-DEVICES = {
-    "elwa": "AC ELWA-E",
-    "acthor": "ACTHOR",
-    "actor9s": "ACTHOR9s",
-    "elwa2": "AC ELWA-2",
-    "meter": "wifi meter",
+# short name . long name
+MYPV_DEVICES = {
+    "AC ELWA-E": "elwa",
+    "AC-THOR": "acthor",
+    "AC-THOR 9s": "actor9s",
+    "AC ELWA-2": "elwa2",
+    "Wi-Fi Meter": "meter",
 }
-
 
 # sensor_type: [name, unit, icon, page, devices]
 SENSOR_TYPES = {
