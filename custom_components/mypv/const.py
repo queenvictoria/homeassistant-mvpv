@@ -16,7 +16,7 @@ DOMAIN = "mypv"
 
 PLATFORMS = [Platform.SENSOR]
 
-DATA_COORDINATOR = "corrdinator"
+DATA_COORDINATOR = "coordinator"
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=10)
 
@@ -46,7 +46,7 @@ SENSOR_TYPES = {
         "data",
         ["elwa"],
     ],
-    "power_act": ["Power", POWER_WATT, "", "data", ["acthor"]],
+    "power_act": ["Power AC-Thor", POWER_WATT, "", "data", ["acthor"]],
     "power_solar_act": [
         "Power from solar",
         POWER_WATT,

@@ -22,12 +22,7 @@ from .const import (
 
 SUPPORTED_SENSOR_TYPES = list(SENSOR_TYPES)
 
-DEFAULT_MONITORED_CONDITIONS = [
-    "device",
-    "power_act",
-    "temp1",
-    "fwversion",
-]
+DEFAULT_MONITORED_CONDITIONS = ["device", "power", "temp1", "fwversion", "tempchip"]
 
 
 @callback

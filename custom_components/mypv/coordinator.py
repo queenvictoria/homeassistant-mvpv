@@ -86,7 +86,9 @@ class MYPVDataUpdateCoordinator(DataUpdateCoordinator):
         """read the firmware info"""
         try:
             response = requests.get(
-                "https://www.my-pv.com/download/currentversion.php?sn=", timeout=10
+                "https://www.my-pv.com/download/currentversion.php?sn="
+                + self._info.get("sn"),
+                timeout=10,
             )
             info = json.loads(response.text)
             _LOGGER.debug(info)
