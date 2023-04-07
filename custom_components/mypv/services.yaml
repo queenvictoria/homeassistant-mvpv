@@ -10,3 +10,9 @@ switch_boost:
     absolute_max_current:
       description: Switch boost on
       example: "1"
+set_control_target:
+  description: Sets the control target. Negative value means feed-in. Only change this value if you are familiar with the control strategy - read Help for more details.
+  fields:
+    control_target:
+      description: Set control target
+      example: "-50"

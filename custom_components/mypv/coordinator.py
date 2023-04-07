@@ -1,4 +1,5 @@
 """Provides the MYPV DataUpdateCoordinator."""
+
 from datetime import timedelta
 import logging
 import requests
@@ -26,13 +27,13 @@ class MYPVDataUpdateCoordinator(DataUpdateCoordinator):
         self._firmware = None
         self._next_update = 0
         self._next_update_firmware = 0
-        update_interval = timedelta(seconds=10)
+        self.update_interval = timedelta(seconds=10)
 
         super().__init__(
             hass,
             _LOGGER,
             name=DOMAIN,
-            update_interval=update_interval,
+            update_interval=self.update_interval,
         )
 
     async def _async_update_data(self) -> dict:
@@ -53,7 +54,7 @@ class MYPVDataUpdateCoordinator(DataUpdateCoordinator):
                 or self._next_update_firmware < utcnow().timestamp()
             ):
                 self._next_update_firmware = utcnow().timestamp() + (7 * 86400)
-                self._firmware = self.firmware_update()
+                # @todo self._firmware = self.firmware_update()
 
             return {
                 "data": data,
@@ -94,4 +95,5 @@ class MYPVDataUpdateCoordinator(DataUpdateCoordinator):
             _LOGGER.debug(info)
             return info
         except:
-            pass
+            _LOGGER.error("Mypv update firmware failed. postpone")
+            return json.loads("{}")

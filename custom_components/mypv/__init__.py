@@ -1,6 +1,6 @@
 """ Integration for MYPV AC-Thor"""
 import voluptuous as vol
-
+import logging
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
@@ -20,6 +20,8 @@ from .const import (
 )
 
 from .coordinator import MYPVDataUpdateCoordinator
+
+_LOGGER = logging.getLogger(__name__)
 
 
 CONFIG_SCHEMA = vol.Schema(
@@ -50,6 +52,7 @@ async def async_setup(hass, config):
             DOMAIN, context={"source": SOURCE_IMPORT}, data=dict(config[DOMAIN])
         )
     )
+
     return True
 
 
