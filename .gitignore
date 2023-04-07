@@ -1,2 +1,4 @@
 dev-env/
 .DS_Store
+custom_components/mypv/__pycache__
+custom_components_*
