@@ -1,22 +1,17 @@
 """Config flow for Kostal piko integration."""
-import voluptuous as vol
-import requests
+
 import json
-from requests.exceptions import HTTPError, ConnectTimeout
+
+import requests
+from requests.exceptions import ConnectTimeout, HTTPError
+import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.const import CONF_HOST, CONF_MONITORED_CONDITIONS
+from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_MONITORED_CONDITIONS,
-)
-from homeassistant.core import HomeAssistant, callback
-
-from .const import (
-    DOMAIN,
-    SENSOR_TYPES,
-)  # pylint:disable=unused-import
+from .const import DOMAIN, SENSOR_TYPES  # pylint:disable=unused-import
 
 SUPPORTED_SENSOR_TYPES = list(SENSOR_TYPES)
 

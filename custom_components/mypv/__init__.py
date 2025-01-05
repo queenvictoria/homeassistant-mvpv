@@ -1,24 +1,16 @@
-""" Integration for MYPV AC-Thor"""
-import voluptuous as vol
+"""Integration for MYPV AC-Thor."""
+
 import logging
 
+import voluptuous as vol
+
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_MONITORED_CONDITIONS,
-)
-import homeassistant.helpers.config_validation as cv
+from homeassistant.const import CONF_HOST, CONF_MONITORED_CONDITIONS
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers.typing import HomeAssistantType
+import homeassistant.helpers.config_validation as cv
 
-from .const import (
-    PLATFORMS,
-    DOMAIN,
-    SENSOR_TYPES,
-    DATA_COORDINATOR,
-)
-
+from .const import DATA_COORDINATOR, DOMAIN, PLATFORMS, SENSOR_TYPES
 from .coordinator import MYPVDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -40,7 +32,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config):
     """Platform setup, do nothing."""
     hass.data.setdefault(DOMAIN, {})
 
@@ -56,7 +48,7 @@ async def async_setup(hass, config):
     return True
 
 
-async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Load the saved entities."""
 
     coordinator = MYPVDataUpdateCoordinator(

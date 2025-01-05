@@ -1,4 +1,4 @@
-"""Translation taken from mypv websetup version 222.04"""
+"""Translation taken from mypv websetup version 222.04."""
 
 my_pv_trans = {
     "language_code": ["de", "en", "fr", "es"],

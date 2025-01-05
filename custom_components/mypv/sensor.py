@@ -1,29 +1,30 @@
 """The MYPV integration."""
 
 import logging
-from homeassistant.const import CONF_MONITORED_CONDITIONS
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.util import slugify
+
 from homeassistant.components.sensor import (
+    SensorDeviceClass,
     SensorEntity,
     SensorStateClass,
-    SensorDeviceClass,
 )
 from homeassistant.const import (
-    ELECTRIC_CURRENT_AMPERE,
-    FREQUENCY_HERTZ,
-    TEMP_CELSIUS,
+    CONF_MONITORED_CONDITIONS,
+    UnitOfElectricCurrent,
+    UnitOfFrequency,
+    UnitOfTemperature,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import SENSOR_TYPES, DOMAIN, DATA_COORDINATOR, MYPV_DEVICES
+from .const import DATA_COORDINATOR, DOMAIN, MYPV_DEVICES, SENSOR_TYPES
 from .coordinator import MYPVDataUpdateCoordinator
 from .trans import my_pv_trans
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_entry(hass: HomeAssistant, entry, async_add_entities):
     """Add an MYPV entry."""
     coordinator: MYPVDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id][
         DATA_COORDINATOR
@@ -79,7 +80,7 @@ class MypvDevice(CoordinatorEntity, SensorEntity):
     @property
     def unique_id(self):
         """Return unique id based on device serial and value key."""
-        return "mypv {} {}".format(self.serial_number, self.type)
+        return f"mypv {self.serial_number} {self.type}"
 
     # @property
     # def entity_id(self):
@@ -103,11 +104,14 @@ class MypvDevice(CoordinatorEntity, SensorEntity):
             state = self._last_value
         if state is None:
             return state
-        if self._unit_of_measurement == FREQUENCY_HERTZ:
+        if self._unit_of_measurement == UnitOfFrequency.HERTZ:
             return state / 1000
-        if self._unit_of_measurement == TEMP_CELSIUS and self.type != "tempchip":
+        if (
+            self._unit_of_measurement == UnitOfTemperature.CELSIUS
+            and self.type != "tempchip"
+        ):
             return state / 10
-        if self._unit_of_measurement == ELECTRIC_CURRENT_AMPERE:
+        if self._unit_of_measurement == UnitOfElectricCurrent.AMPERE:
             return state / 10
         trans_key = f"info_{self.type}_{str(state)}"
         if "status" == self.type:
@@ -129,14 +133,14 @@ class MypvDevice(CoordinatorEntity, SensorEntity):
 
     @property
     def state_class(self):
-        """state class"""
+        """State class."""
         if self.type == "power":
             return SensorStateClass.MEASUREMENT
         return None
 
     @property
     def device_class(self):
-        """state class"""
+        """State class."""
         if self.type == "power":
             return SensorDeviceClass.POWER
         return None
