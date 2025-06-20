@@ -1,10 +1,10 @@
 """Provides the MYPV DataUpdateCoordinator."""
 
+import asyncio
 from datetime import timedelta
 import json
 import logging
 
-from async_timeout import timeout
 import requests
 
 from homeassistant.const import CONF_HOST
@@ -65,7 +65,7 @@ class MYPVDataUpdateCoordinator(DataUpdateCoordinator):
             }
 
         try:
-            async with timeout(4):
+            async with asyncio.timeout(4):
                 return await self.hass.async_add_executor_job(_update_data)
         except Exception as error:
             raise UpdateFailed(f"Invalid response from API: {error}") from error
@@ -80,9 +80,11 @@ class MYPVDataUpdateCoordinator(DataUpdateCoordinator):
             response = requests.get(f"http://{self._host}/{page}.jsn", timeout=10)
             data = json.loads(response.text)
             _LOGGER.debug(data)
+        except Exception as error:
+            _LOGGER.error("Failed to update JSON data: %s", error)
+            return None
+        else:
             return data
-        except:
-            pass
 
     def firmware_update(self):
         """Read the firmware info."""
@@ -94,7 +96,8 @@ class MYPVDataUpdateCoordinator(DataUpdateCoordinator):
             )
             info = json.loads(response.text)
             _LOGGER.debug(info)
-            return info
-        except:
+        except Exception:
             _LOGGER.error("Mypv update firmware failed. postpone")
             return json.loads("{}")
+        else:
+            return info

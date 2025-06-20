@@ -38,22 +38,31 @@ async def async_setup_entry(hass: HomeAssistant, entry, async_add_entities):
 
     entities = []
 
-    if "use_all_sensors" in entry.options and entry.options["use_all_sensors"]:
-        for sensor in SENSOR_TYPES:
-            entities.append(MypvDevice(coordinator, sensor, entry.title))
+    if entry.options.get("use_all_sensors"):
+        entities.extend(
+            [MypvDevice(coordinator, sensor, entry.title) for sensor in SENSOR_TYPES]
+        )
     elif CONF_MONITORED_CONDITIONS in entry.options:
-        for sensor in entry.options[CONF_MONITORED_CONDITIONS]:
-            entities.append(MypvDevice(coordinator, sensor, entry.title))
+        entities.extend(
+            [
+                MypvDevice(coordinator, sensor, entry.title)
+                for sensor in entry.options[CONF_MONITORED_CONDITIONS]
+            ]
+        )
     else:
-        for sensor in entry.data[CONF_MONITORED_CONDITIONS]:
-            entities.append(MypvDevice(coordinator, sensor, entry.title))
+        entities.extend(
+            [
+                MypvDevice(coordinator, sensor, entry.title)
+                for sensor in entry.data[CONF_MONITORED_CONDITIONS]
+            ]
+        )
     async_add_entities(entities)
 
 
 class MypvDevice(CoordinatorEntity, SensorEntity):
     """Representation of a MYPV device."""
 
-    def __init__(self, coordinator, sensor_type, name):
+    def __init__(self, coordinator, sensor_type, name) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
         if sensor_type not in SENSOR_TYPES:
@@ -92,6 +101,7 @@ class MypvDevice(CoordinatorEntity, SensorEntity):
     @property
     def state(self):
         """Return the state of the device."""
+        state = None
         try:
             state = self.coordinator.data[self._data_source][self.type]
             if self.type == "power_act":
@@ -99,6 +109,10 @@ class MypvDevice(CoordinatorEntity, SensorEntity):
                 load_nom = int(self.coordinator.data[self._data_source]["load_nom"])
                 state = (rel_out * load_nom) + int(state)
             self._last_value = state
+        except KeyError:
+            _LOGGER.exception(
+                "State not found on device. You should remove it from the configuration"
+            )
         except Exception as ex:
             _LOGGER.error(ex)
             state = self._last_value
@@ -113,9 +127,9 @@ class MypvDevice(CoordinatorEntity, SensorEntity):
             return state / 10
         if self._unit_of_measurement == UnitOfElectricCurrent.AMPERE:
             return state / 10
-        trans_key = f"info_{self.type}_{str(state)}"
-        if "status" == self.type:
-            trans_key = f"info_state_{MYPV_DEVICES[self.model]}_{str(state)}"
+        trans_key = f"info_{self.type}_{state!s}"
+        if self.type == "status":
+            trans_key = f"info_state_{MYPV_DEVICES[self.model]}_{state!s}"
         elif self.type in ["m1devstate", "m2devstate", "m3devstate", "m4devstate"]:
             if state & 1:
                 trans_key = "info_measure_devstate_err1"

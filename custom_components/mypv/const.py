@@ -34,6 +34,8 @@ MYPV_DEVICES = {
 
 @dataclass
 class S:
+    """Sensor description with metadata for MYPV integration."""
+
     name_long: str
     unit: str = None
     icon: str = ""

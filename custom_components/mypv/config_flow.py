@@ -21,9 +21,9 @@ DEFAULT_MONITORED_CONDITIONS = ["device", "power", "temp1", "fwversion", "tempch
 @callback
 def mypv_entries(hass: HomeAssistant):
     """Return the hosts for the domain."""
-    return set(
-        (entry.data[CONF_HOST]) for entry in hass.config_entries.async_entries(DOMAIN)
-    )
+    return {
+        entry.data[CONF_HOST] for entry in hass.config_entries.async_entries(DOMAIN)
+    }
 
 
 class MypvConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -105,11 +105,12 @@ class MypvConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(config_entry):
+        """Return the options flow handler for the config entry."""
         return MypvOptionsFlowHandler(config_entry)
 
 
 class MypvOptionsFlowHandler(config_entries.OptionsFlow):
-    """Handles options flow"""
+    """Handles options flow."""
 
     def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
         """Initialize options flow."""
